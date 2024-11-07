@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x, 22.x, 23.x ]
 
     steps:
     - uses: actions/checkout@v4
@@ -25,3 +25,17 @@ jobs:
       run: npm test
     - name: Run linter
       run: npm run lint
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [test-and-lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm publish --access public --tag ${{github.ref_name == 'master' && 'latest' || 'next' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
